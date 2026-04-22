@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RegIA — Soluciones Inteligentes</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --black: #080810;
+    --white: #f0f0f5;
+    --accent: #00e5a0;
+    --accent2: #7b5cff;
+    --glass: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--black); color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px; line-height: 1.6;
+    overflow-x: hidden; cursor: none;
+  }
+
+  /* ── Cursor ── */
+  .cursor { width: 10px; height: 10px; background: var(--accent); border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999; mix-blend-mode: difference; }
+  .cursor-ring { width: 36px; height: 36px; border: 1.5px solid var(--accent); border-radius: 50%; position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9998; transition: all 0.18s ease; opacity: 0.5; }
+
+  /* ── Fondo ── */
+  .bg-grid { position: fixed; inset: 0; z-index: 0; background-image: linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px); background-size: 60px 60px; animation: gridMove 20s linear infinite; }
+  @keyframes gridMove { 0% { background-position: 0 0; } 100% { background-position: 60px 60px; } }
+  .blob { position: fixed; border-radius: 50%; filter: blur(100px); opacity: 0.12; pointer-events: none; z-index: 0; animation: blobFloat 12s ease-in-out infinite; }
+  .blob-1 { width: 500px; height: 500px; background: var(--accent); top: -100px; right: -100px; }
+  .blob-2 { width: 400px; height: 400px; background: var(--accent2); bottom: 10%; left: -100px; animation-delay: -6s; }
+  @keyframes blobFloat { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(30px,-30px) scale(1.08); } }
+
+  main { position: relative; z-index: 1; }
+  section { padding: 120px 24px; max-width: 1100px; margin: 0 auto; }
+
+  /* ── NAV ── */
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 20px 48px; background: rgba(8,8,16,0.7); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); animation: fadeDown 0.8s ease both; }
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── LOGO ── */
+  .logo-wrap { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .logo-icon { width: 38px; height: 38px; flex-shrink: 0; }
+  .logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem; letter-spacing: -0.02em; color: var(--white); }
+  .logo-text span { color: var(--accent); }
+
+  .nav-links { display: flex; gap: 36px; list-style: none; }
+  .nav-links a { color: rgba(240,240,245,0.6); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-cta { background: var(--accent); color: var(--black); padding: 10px 24px; border-radius: 100px; font-weight: 600; font-size: 0.9rem; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s; }
+  .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,229,160,0.3); }
+
+  /* ── HERO ── */
+  .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding-top: 120px; padding-bottom: 80px; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--glass); border: 1px solid var(--border); padding: 6px 16px; border-radius: 100px; font-size: 0.8rem; color: var(--accent); margin-bottom: 32px; animation: fadeUp 0.8s 0.2s ease both; }
+  .hero-badge::before { content: ''; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(3rem, 7vw, 6rem); font-weight: 800; line-height: 1.0; letter-spacing: -0.03em; margin-bottom: 24px; animation: fadeUp 0.8s 0.3s ease both; }
+  .hero h1 em { font-style: normal; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero p { font-size: 1.2rem; color: rgba(240,240,245,0.6); max-width: 560px; margin-bottom: 48px; font-weight: 300; line-height: 1.7; animation: fadeUp 0.8s 0.4s ease both; }
+  .hero-btns { display: flex; gap: 16px; flex-wrap: wrap; animation: fadeUp 0.8s 0.5s ease both; }
+  .btn-primary { background: var(--accent); color: var(--black); padding: 16px 36px; border-radius: 100px; font-weight: 700; font-size: 1rem; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+  .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,229,160,0.35); }
+  .btn-secondary { background: transparent; color: var(--white); padding: 16px 36px; border-radius: 100px; font-weight: 500; font-size: 1rem; text-decoration: none; border: 1px solid var(--border); transition: border-color 0.2s, background 0.2s; }
+  .btn-secondary:hover { border-color: var(--accent); background: rgba(0,229,160,0.05); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  .hero-stats { display: flex; gap: 48px; margin-top: 80px; padding-top: 48px; border-top: 1px solid var(--border); animation: fadeUp 0.8s 0.6s ease both; }
+  .stat-num { font-family: 'Syne', sans-serif; font-size: 2.5rem; font-weight: 800; color: var(--accent); line-height: 1; }
+  .stat-label { font-size: 0.85rem; color: rgba(240,240,245,0.5); margin-top: 4px; }
+
+  /* ── SERVICIOS ── */
+  .section-label { font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; font-weight: 600; }
+  .section-title { font-family: 'Syne', sans-serif; font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 16px; }
+  .section-sub { color: rgba(240,240,245,0.5); font-size: 1.05rem; max-width: 500px; font-weight: 300; }
+  .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-top: 64px; }
+  .service-card { background: var(--glass); border: 1px solid var(--border); border-radius: 20px; padding: 40px; transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s; position: relative; overflow: hidden; }
+  .service-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); opacity: 0; transition: opacity 0.3s; }
+  .service-card:hover { transform: translateY(-8px); border-color: rgba(0,229,160,0.2); box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+  .service-card:hover::before { opacity: 1; }
+  .service-icon { width: 52px; height: 52px; border-radius: 14px; background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 24px; }
+  .service-card h3 { font-family: 'Syne', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 12px; }
+  .service-card p { color: rgba(240,240,245,0.55); font-size: 0.95rem; line-height: 1.7; margin-bottom: 24px; }
+  .service-features { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .service-features li { font-size: 0.875rem; color: rgba(240,240,245,0.6); display: flex; align-items: center; gap: 8px; }
+  .service-features li::before { content: '→'; color: var(--accent); font-weight: 700; }
+
+  /* ── PRECIOS ── */
+  .pricing-tabs { display: flex; gap: 8px; margin: 48px 0 40px; background: var(--glass); border: 1px solid var(--border); padding: 6px; border-radius: 100px; width: fit-content; }
+  .tab-btn { padding: 10px 28px; border-radius: 100px; border: none; cursor: none; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; color: rgba(240,240,245,0.5); background: transparent; }
+  .tab-btn.active { background: var(--accent); color: var(--black); font-weight: 700; }
+  .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+  .price-card { background: var(--glass); border: 1px solid var(--border); border-radius: 20px; padding: 36px; transition: transform 0.3s, border-color 0.3s; position: relative; }
+  .price-card.featured { border-color: var(--accent); background: rgba(0,229,160,0.05); }
+  .price-card.featured::after { content: 'MÁS POPULAR'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--accent); color: var(--black); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; padding: 4px 14px; border-radius: 100px; }
+  .price-card:hover { transform: translateY(-6px); }
+  .price-tier { font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; font-weight: 600; }
+  .price-amount { font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+  .price-amount span { font-size: 1.2rem; color: rgba(240,240,245,0.5); }
+  .price-period { font-size: 0.85rem; color: rgba(240,240,245,0.4); margin-bottom: 8px; }
+  .price-setup { font-size: 0.8rem; color: var(--accent); margin-bottom: 28px; }
+  .price-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+  .price-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
+  .price-features li { font-size: 0.9rem; color: rgba(240,240,245,0.7); display: flex; align-items: center; gap: 10px; }
+  .price-features li::before { content: '✓'; color: var(--accent); font-weight: 700; flex-shrink: 0; }
+  .price-btn { display: block; text-align: center; padding: 14px; border-radius: 100px; font-weight: 600; font-size: 0.95rem; text-decoration: none; transition: all 0.2s; }
+  .price-btn-outline { border: 1px solid var(--border); color: var(--white); }
+  .price-btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .price-btn-filled { background: var(--accent); color: var(--black); }
+  .price-btn-filled:hover { box-shadow: 0 8px 30px rgba(0,229,160,0.3); transform: translateY(-2px); }
+
+  /* ── PROCESO ── */
+  .process-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 32px; margin-top: 64px; }
+  .step-num { font-family: 'Syne', sans-serif; font-size: 4rem; font-weight: 800; color: rgba(0,229,160,0.08); line-height: 1; margin-bottom: -16px; }
+  .step h4 { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+  .step p { font-size: 0.9rem; color: rgba(240,240,245,0.5); line-height: 1.7; }
+
+  /* ── FORMULARIO ── */
+  .contact-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
+  .contact-info h2 { font-family: 'Syne', sans-serif; font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 20px; }
+  .contact-info p { color: rgba(240,240,245,0.55); font-size: 1rem; line-height: 1.7; margin-bottom: 40px; font-weight: 300; }
+  .contact-perks { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+  .contact-perks li { display: flex; align-items: center; gap: 12px; font-size: 0.95rem; color: rgba(240,240,245,0.7); }
+  .contact-perks li::before { content: '✓'; color: var(--accent); font-weight: 700; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,229,160,0.1); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; }
+
+  /* Formulario */
+  .form-card { background: var(--glass); border: 1px solid var(--border); border-radius: 24px; padding: 48px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  .form-group label { font-size: 0.85rem; color: rgba(240,240,245,0.6); font-weight: 500; }
+  .form-group input, .form-group select, .form-group textarea {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 18px;
+    color: var(--white); font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem; transition: border-color 0.2s, background 0.2s;
+    outline: none; width: 100%; cursor: none;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); background: rgba(0,229,160,0.04); }
+  .form-group input::placeholder, .form-group textarea::placeholder { color: rgba(240,240,245,0.25); }
+  .form-group select option { background: #1a1a2e; color: var(--white); }
+  .form-group textarea { resize: vertical; min-height: 100px; }
+  .form-submit { width: 100%; padding: 16px; border-radius: 100px; background: var(--accent); color: var(--black); font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; border: none; cursor: none; transition: transform 0.2s, box-shadow 0.2s; letter-spacing: 0.02em; }
+  .form-submit:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,229,160,0.35); }
+  .form-note { text-align: center; font-size: 0.8rem; color: rgba(240,240,245,0.3); margin-top: 16px; }
+
+  /* Success message */
+  .form-success { display: none; text-align: center; padding: 40px 20px; }
+  .form-success .success-icon { font-size: 3rem; margin-bottom: 16px; }
+  .form-success h3 { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; color: var(--accent); }
+  .form-success p { color: rgba(240,240,245,0.6); font-size: 0.95rem; }
+
+  /* ── FOOTER ── */
+  footer { border-top: 1px solid var(--border); padding: 40px 48px; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
+  .footer-logo-wrap { display: flex; align-items: center; gap: 10px; }
+  .footer-logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem; }
+  .footer-logo-text span { color: var(--accent); }
+  footer p { font-size: 0.85rem; color: rgba(240,240,245,0.3); }
+
+  /* ── TABS ── */
+  .pricing-content { display: none; }
+  .pricing-content.active { display: block; }
+
+  /* ── REVEAL ── */
+  .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 768px) {
+    nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+    .hero-stats { gap: 32px; flex-wrap: wrap; }
+    .contact-wrap { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 16px; text-align: center; }
+    .form-card { padding: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="bg-grid"></div>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#inicio" class="logo-wrap">
+    <!-- LOGO SVG minimalista elegante -->
+    <svg class="logo-icon" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Hexágono exterior -->
+      <path d="M19 2L34.5 11V27L19 36L3.5 27V11L19 2Z" stroke="#00e5a0" stroke-width="1.2" fill="none"/>
+      <!-- R estilizada interior -->
+      <path d="M13 11h7.5a4.5 4.5 0 0 1 0 9H13V11z" stroke="#00e5a0" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="13" y1="20" x2="13" y2="27" stroke="#00e5a0" stroke-width="1.4" stroke-linecap="round"/>
+      <path d="M20.5 20L25 27" stroke="#7b5cff" stroke-width="1.4" stroke-linecap="round"/>
+      <!-- Punto acento -->
+      <circle cx="28" cy="11" r="2" fill="#00e5a0"/>
+    </svg>
+    <span class="logo-text">Reg<span>IA</span></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#servicios">Servicios</a></li>
+    <li><a href="#precios">Precios</a></li>
+    <li><a href="#proceso">Proceso</a></li>
+    <li><a href="#contacto">Contacto</a></li>
+  </ul>
+  <a href="#contacto" class="nav-cta">Contáctenos →</a>
+</nav>
+
+<main>
+
+<!-- HERO -->
+<section class="hero" id="inicio">
+  <div class="hero-badge">Automatización · IA · Resultados reales</div>
+  <h1>Tu empresa,<br>en <em>piloto automático</em></h1>
+  <p>Automatizamos los procesos repetitivos de tu negocio con Inteligencia Artificial para que tu equipo se centre en lo que realmente importa.</p>
+  <div class="hero-btns">
+    <a href="#contacto" class="btn-primary">Solicitar auditoría gratis →</a>
+    <a href="#servicios" class="btn-secondary">Ver servicios</a>
+  </div>
+  <div class="hero-stats">
+    <div><div class="stat-num">80%</div><div class="stat-label">Tareas automatizadas</div></div>
+    <div><div class="stat-num">48h</div><div class="stat-label">Tiempo de entrega</div></div>
+    <div><div class="stat-num">3x</div><div class="stat-label">ROI medio del cliente</div></div>
+  </div>
+</section>
+
+<!-- SERVICIOS -->
+<section id="servicios">
+  <div class="reveal">
+    <div class="section-label">Servicios</div>
+    <h2 class="section-title">Todo lo que necesitas<br>para crecer con IA</h2>
+    <p class="section-sub">Desde automatizaciones simples hasta agentes inteligentes a medida.</p>
+  </div>
+  <div class="services-grid">
+    <div class="service-card reveal">
+      <div class="service-icon">⚡</div>
+      <h3>Automatizaciones</h3>
+      <p>Elimina las tareas repetitivas de tu negocio. Conectamos tus apps y procesos para que trabajen solos.</p>
+      <ul class="service-features">
+        <li>Flujos de trabajo automáticos</li>
+        <li>Integración entre apps</li>
+        <li>Reportes y alertas automáticas</li>
+        <li>Gestión de emails y CRM</li>
+      </ul>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-icon">🤖</div>
+      <h3>Agentes IA</h3>
+      <p>Asistentes inteligentes que trabajan por ti 24/7. Atienden clientes, generan leads y toman decisiones.</p>
+      <ul class="service-features">
+        <li>Chatbots de atención al cliente</li>
+        <li>Agentes de prospección</li>
+        <li>Asistentes internos de empresa</li>
+        <li>Análisis y reporting con IA</li>
+      </ul>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-icon">🌐</div>
+      <h3>Webs y Herramientas</h3>
+      <p>Desarrollamos webs modernas con IA integrada y herramientas a medida para tu negocio.</p>
+      <ul class="service-features">
+        <li>Landing pages de alta conversión</li>
+        <li>Webs con IA integrada</li>
+        <li>Dashboards y paneles</li>
+        <li>Herramientas internas</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- PRECIOS -->
+<section id="precios">
+  <div class="reveal">
+    <div class="section-label">Precios</div>
+    <h2 class="section-title">Transparentes y sin sorpresas</h2>
+    <p class="section-sub">Precio fijo de implantación + mantenimiento mensual opcional.</p>
+  </div>
+  <div class="pricing-tabs reveal">
+    <button class="tab-btn active" onclick="showTab('automatizaciones', event)">Automatizaciones</button>
+    <button class="tab-btn" onclick="showTab('agentes', event)">Agentes IA</button>
+    <button class="tab-btn" onclick="showTab('webs', event)">Webs</button>
+  </div>
+  <div class="pricing-content active" id="tab-automatizaciones">
+    <div class="pricing-grid">
+      <div class="price-card"><div class="price-tier">Básico</div><div class="price-amount">300<span>€</span></div><div class="price-period">pago único</div><div class="price-setup">+ 50–80€/mes mantenimiento</div><hr class="price-divider"><ul class="price-features"><li>1 automatización simple</li><li>Conexión entre 2 apps</li><li>Entrega en 48h</li><li>1 revisión incluida</li></ul><a href="#contacto" class="price-btn price-btn-outline">Empezar →</a></div>
+      <div class="price-card featured"><div class="price-tier">Estándar</div><div class="price-amount">800<span>€</span></div><div class="price-period">pago único</div><div class="price-setup">+ 120–200€/mes mantenimiento</div><hr class="price-divider"><ul class="price-features"><li>2–3 automatizaciones conectadas</li><li>Múltiples apps integradas</li><li>Dashboard de seguimiento</li><li>Soporte prioritario</li><li>3 revisiones incluidas</li></ul><a href="#contacto" class="price-btn price-btn-filled">Empezar →</a></div>
+      <div class="price-card"><div class="price-tier">Premium</div><div class="price-amount">2.000<span>€</span></div><div class="price-period">pago único</div><div class="price-setup">+ 250–400€/mes mantenimiento</div><hr class="price-divider"><ul class="price-features"><li>Sistema completo a medida</li><li>Integraciones ilimitadas</li><li>Formación al equipo</li><li>Soporte 24/7</li><li>Revisiones ilimitadas</li></ul><a href="#contacto" class="price-btn price-btn-outline">Empezar →</a></div>
+    </div>
+  </div>
+  <div class="pricing-content" id="tab-agentes">
+    <div class="pricing-grid">
+      <div class="price-card"><div class="price-tier">Básico</div><div class="price-amount">500<span>€</span></div><div class="price-period">pago único</div><div class="price-setup">+ 80–120€/mes mantenimiento</div><hr class="price-divider"><ul class="price-features"><li>Chatbot de atención básico</li><li>Hasta 50 preguntas programadas</li><li>Integración en tu web</li><li>Panel de control simple</li></ul><a href="#contacto" class="price-btn price-btn-outline">Empezar →</a></div>
+      <div class="price-card featured"><div class="price-tier">Estándar</div><div class="price-amount">1.500<span>€</span></div><div class="price-period">pago único</div><div class="price-setup">+ 200–350€/mes mantenimiento</div><hr class="price-divider"><ul class="price-features"><li>Agente IA con memoria</li><li>Integración con CRM y email</li><li>Multicanal (web + WhatsApp)</li><li>Análisis de conversaciones</li><li>Entrenamiento personalizado</li></ul><a href="#contacto" class="price-btn price-btn-filled">Empezar →</a></div>
+      <div class="price-card"><div class="price-tier">Premium</div><div class="price-amount">4.000<span>€</span></div><div class="price-period">pago único</div><div class="price-setup">+ 400–600€/mes mantenimiento</div><hr class="price-divider"><ul class="price-features"><li>Agente autónomo a medida</li><li>Toma decisiones y actúa solo</li><li>Todos los canales integrados</li><li>IA entrenada con tus datos</li><li>Soporte y mejoras continuas</li></ul><a href="#contacto" class="price-btn price-btn-outline">Empezar →</a></div>
+    </div>
+  </div>
+  <div class="pricing-content" id="tab-webs">
+    <div class="pricing-grid">
+      <div class="price-card"><div class="price-tier">Básico</div><div class="price-amount">500<span>€</span></div><div class="price-period">pago único</div><div class="price-setup">+ 50–80€/mes mantenimiento</div><hr class="price-divider"><ul class="price-features"><li>Landing page de alta conversión</li><li>Diseño moderno y responsive</li><li>Formulario de contacto</li><li>Entrega en 72h</li></ul><a href="#contacto" class="price-btn price-btn-outline">Empezar →</a></div>
+      <div class="price-card featured"><div class="price-tier">Estándar</div><div class="price-amount">1.500<span>€</span></div><div class="price-period">pago único</div><div class="price-setup">+ 120–200€/mes mantenimiento</div><hr class="price-divider"><ul class="price-features"><li>Web completa multi-página</li><li>Chatbot IA integrado</li><li>Panel de administración</li><li>SEO básico incluido</li><li>Automatizaciones básicas</li></ul><a href="#contacto" class="price-btn price-btn-filled">Empezar →</a></div>
+      <div class="price-card"><div class="price-tier">Premium</div><div class="price-amount">3.000<span>€</span></div><div class="price-period">pago único</div><div class="price-setup">+ 250–400€/mes mantenimiento</div><hr class="price-divider"><ul class="price-features"><li>Web + herramientas a medida</li><li>IA integrada en toda la web</li><li>Dashboard analítico</li><li>Automatizaciones completas</li><li>Mantenimiento prioritario</li></ul><a href="#contacto" class="price-btn price-btn-outline">Empezar →</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESO -->
+<section id="proceso">
+  <div class="reveal">
+    <div class="section-label">Cómo trabajamos</div>
+    <h2 class="section-title">Simple, rápido y sin complicaciones</h2>
+    <p class="section-sub">En 4 pasos tu negocio ya está automatizado.</p>
+  </div>
+  <div class="process-steps">
+    <div class="step reveal"><div class="step-num">01</div><h4>Auditoría gratuita</h4><p>Analizamos tu negocio e identificamos qué procesos se pueden automatizar para ahorrar tiempo y dinero.</p></div>
+    <div class="step reveal"><div class="step-num">02</div><h4>Propuesta a medida</h4><p>Te presentamos una solución concreta con precio fijo, plazo de entrega y resultados esperados.</p></div>
+    <div class="step reveal"><div class="step-num">03</div><h4>Desarrollo en 48h</h4><p>Implementamos la solución rápidamente. Sin esperas, sin burocracia, sin sorpresas en el precio.</p></div>
+    <div class="step reveal"><div class="step-num">04</div><h4>Soporte continuo</h4><p>Monitorizamos que todo funcione correctamente y realizamos mejoras continuas según tus necesidades.</p></div>
+  </div>
+</section>
+
+<!-- CONTACTO -->
+<section id="contacto">
+  <div class="contact-wrap">
+    <div class="contact-info reveal">
+      <div class="section-label">Contacto</div>
+      <h2>Cuéntenos qué necesita su empresa</h2>
+      <p>Rellene el formulario y le respondemos en menos de 24 horas con una propuesta personalizada y sin compromiso.</p>
+      <ul class="contact-perks">
+        <li>Auditoría inicial completamente gratuita</li>
+        <li>Propuesta con precio fijo y sin sorpresas</li>
+        <li>Respuesta garantizada en menos de 24h</li>
+        <li>Sin permanencia ni contratos largos</li>
+      </ul>
+    </div>
+    <div class="reveal">
+      <div class="form-card">
+        <form id="contactForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre *</label>
+              <input type="text" name="nombre" placeholder="Su nombre" required>
+            </div>
+            <div class="form-group">
+              <label>Empresa *</label>
+              <input type="text" name="empresa" placeholder="Nombre de la empresa" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email *</label>
+              <input type="email" name="email" placeholder="correo@empresa.com" required>
+            </div>
+            <div class="form-group">
+              <label>Teléfono</label>
+              <input type="tel" name="telefono" placeholder="+34 600 000 000">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Servicio de interés</label>
+            <select name="servicio">
+              <option value="">Seleccionar servicio...</option>
+              <option>Automatizaciones</option>
+              <option>Agentes IA</option>
+              <option>Web y Herramientas</option>
+              <option>No lo tengo claro aún</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>¿Qué necesita automatizar o mejorar?</label>
+            <textarea name="mensaje" placeholder="Cuéntenos brevemente su situación y qué le gustaría conseguir..."></textarea>
+          </div>
+          <button type="submit" class="form-submit" id="submitBtn">Enviar solicitud →</button>
+          <p class="form-note">Sin compromiso · Respuesta en menos de 24h · Sus datos están seguros</p>
+        </form>
+        <div class="form-success" id="formSuccess">
+          <div class="success-icon">✅</div>
+          <h3>¡Mensaje recibido!</h3>
+          <p>Nos pondremos en contacto con usted en menos de 24 horas.<br>Revise también su carpeta de spam.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="footer-logo-wrap">
+    <svg width="28" height="28" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M19 2L34.5 11V27L19 36L3.5 27V11L19 2Z" stroke="#00e5a0" stroke-width="1.2" fill="none"/>
+      <path d="M13 11h7.5a4.5 4.5 0 0 1 0 9H13V11z" stroke="#00e5a0" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="13" y1="20" x2="13" y2="27" stroke="#00e5a0" stroke-width="1.4" stroke-linecap="round"/>
+      <path d="M20.5 20L25 27" stroke="#7b5cff" stroke-width="1.4" stroke-linecap="round"/>
+      <circle cx="28" cy="11" r="2" fill="#00e5a0"/>
+    </svg>
+    <span class="footer-logo-text">Reg<span>IA</span> Soluciones Inteligentes</span>
+  </div>
+  <p>© 2025 RegIA · ian@regiasi.com</p>
+</footer>
+
+<script>
+  // Cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cursor.style.left = mx - 5 + 'px'; cursor.style.top = my - 5 + 'px'; });
+  function animateRing() { rx += (mx - rx - 18) * 0.12; ry += (my - ry - 18) * 0.12; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(animateRing); }
+  animateRing();
+  document.querySelectorAll('a, button, input, textarea, select').forEach(el => {
+    el.addEventListener('mouseenter', () => { ring.style.transform = 'scale(1.8)'; ring.style.opacity = '0.8'; });
+    el.addEventListener('mouseleave', () => { ring.style.transform = 'scale(1)'; ring.style.opacity = '0.5'; });
+  });
+
+  // Tabs
+  function showTab(tab, event) {
+    document.querySelectorAll('.pricing-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  // Scroll reveal
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Formulario → Formspree (gratuito, envía a tu email)
+  const form = document.getElementById('contactForm');
+  const successDiv = document.getElementById('formSuccess');
+  const submitBtn = document.getElementById('submitBtn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submitBtn.textContent = 'Enviando...';
+    submitBtn.disabled = true;
+
+    const data = new FormData(form);
+    const body = {
+      nombre: data.get('nombre'),
+      empresa: data.get('empresa'),
+      email: data.get('email'),
+      telefono: data.get('telefono'),
+      servicio: data.get('servicio'),
+      mensaje: data.get('mensaje')
+    };
+
+    try {
+      // Usar Formspree - reemplaza XXXXXXXX con tu ID de Formspree
+      const res = await fetch('https://formspree.io/f/XXXXXXXX', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        form.style.display = 'none';
+        successDiv.style.display = 'block';
+      } else {
+        throw new Error('Error');
+      }
+    } catch {
+      submitBtn.textContent = 'Enviar solicitud →';
+      submitBtn.disabled = false;
+      alert('Ha ocurrido un error. Por favor escríbenos directamente a ian@regiasi.com');
+    }
+  });
+</script>
+</body>
+</html>
